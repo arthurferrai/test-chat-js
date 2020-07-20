@@ -1,46 +1,90 @@
-const socket = io()
+var socket = io()
 
 // Elements
-const $messageForm = document.querySelector('#message-form')
-const $messageFormInput = $messageForm.querySelector('input')
-const $messageFormButton = $messageForm.querySelector('button')
-const $sendLocationButton = document.querySelector('#send-location')
-const $messages = document.querySelector('#messages')
+var $messageForm = document.getElementById('message-form')
+var $messageFormInput = $messageForm.querySelector('input')
+var $messageFormButton = $messageForm.querySelector('button')
+// var $sendLocationButton = document.querySelector('#send-location')
+var $messages = document.getElementById('messages')
+var $typing = document.getElementById('typing')
 
 // Templates
-const messageTemplate = document.querySelector('#message-template').innerHTML
-const locationMessageTemplate = document.querySelector('#location-message-template').innerHTML
-const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
+var messageTemplate = document.getElementById('message-template').innerHTML
+var locationMessageTemplate = document.getElementById('location-message-template').innerHTML
+var sidebarTemplate = document.getElementById('sidebar-template').innerHTML
 
 // Options
-const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+var ___options = Qs.parse(location.search, { ignoreQueryPrefix: true })
+var username = ___options.username
+var room = ___options.room
 
-const autoscroll = () => {
+function autoscroll() {
     // New message element
-    const $newMessage = $messages.lastElementChild
+    var $newMessage = $messages.lastElementChild
 
     // Height of the new message
-    const newMessageStyles = getComputedStyle($newMessage)
-    const newMessageMargin = parseInt(newMessageStyles.marginBottom)
-    const newMessageHeight = $newMessage.offsetHeight + newMessageMargin
+    var newMessageStyles = getComputedStyle($newMessage)
+    var newMessageMargin = parseInt(newMessageStyles.marginBottom)
+    var newMessageHeight = $newMessage.offsetHeight + newMessageMargin
 
     // Visible height
-    const visibleHeight = $messages.offsetHeight
+    var visibleHeight = $messages.offsetHeight
 
     // Height of messages container
-    const containerHeight = $messages.scrollHeight
+    var containerHeight = $messages.scrollHeight
 
     // How far have I scrolled?
-    const scrollOffset = $messages.scrollTop + visibleHeight
+    var scrollOffset = $messages.scrollTop + visibleHeight
 
     if (containerHeight - newMessageHeight <= scrollOffset) {
         $messages.scrollTop = $messages.scrollHeight
     }
 }
 
-socket.on('message', (message) => {
+function showTyping() {
+    $typing.style.visibility = "visible"
+}
+
+function hideTyping() {
+    $typing.style.visibility = "hidden"
+}
+
+var peopleTyping = []
+
+function addToTyping(username) {
+    if (peopleTyping.indexOf(username) === -1) {
+        peopleTyping.push(username)
+    }
+}
+function removeFromTyping(username) {
+    var userIndex = peopleTyping.indexOf(username)
+    if (userIndex === -1) return
+    peopleTyping.splice(userIndex, 1)
+}
+
+function formatTypingText() {
+    var lenTyping = peopleTyping.length
+    var text = ""
+    if (lenTyping === 0) text = ''
+    else if (lenTyping === 1) text = '"' + peopleTyping[0] + '" está digitando...'
+    else if (lenTyping === 2) text = '"' + peopleTyping[0] + '" e "' + peopleTyping[1] + '" estão digitando...'
+    else text = 'várias pessoas estão digitando...'
+    $typing.innerText = text
+}
+
+socket.on('typing', function(data) {
+    addToTyping(data.username)
+    formatTypingText()
+    setTimeout(function() {
+        removeFromTyping(data.username)
+        formatTypingText()
+    }, 5000)
+})
+socket.on('message', function (message) {
     console.log(message)
-    const html = Mustache.render(messageTemplate, {
+    removeFromTyping(message.username)
+    formatTypingText()
+    var html = Mustache.render(messageTemplate, {
         username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a')
@@ -49,33 +93,35 @@ socket.on('message', (message) => {
     autoscroll()
 })
 
-socket.on('locationMessage', (message) => {
-    console.log(message)
-    const html = Mustache.render(locationMessageTemplate, {
-        username: message.username,
-        url: message.url,
-        createdAt: moment(message.createdAt).format('h:mm a')
-    })
-    $messages.insertAdjacentHTML('beforeend', html)
-    autoscroll()
-})
+// socket.on('locationMessage', function (message) {
+//     console.log(message)
+//     var html = Mustache.render(locationMessageTemplate, {
+//         username: message.username,
+//         url: message.url,
+//         createdAt: moment(message.createdAt).format('h:mm a')
+//     })
+//     $messages.insertAdjacentHTML('beforeend', html)
+//     autoscroll()
+// })
 
-socket.on('roomData', ({ room, users }) => {
-    const html = Mustache.render(sidebarTemplate, {
-        room,
-        users
+socket.on('roomData', function (roomData) {
+    var room = roomData.room
+    var users = roomData.users
+    var html = Mustache.render(sidebarTemplate, {
+        room: room,
+        users: users
     })
     document.querySelector('#sidebar').innerHTML = html
 })
 
-$messageForm.addEventListener('submit', (e) => {
+$messageForm.addEventListener('submit', function (e) {
     e.preventDefault()
 
     $messageFormButton.setAttribute('disabled', 'disabled')
 
-    const message = e.target.elements.message.value
+    var message = e.target.elements.message.value
 
-    socket.emit('sendMessage', message, (error) => {
+    socket.emit('sendMessage', message, function (error) {
         $messageFormButton.removeAttribute('disabled')
         $messageFormInput.value = ''
         $messageFormInput.focus()
@@ -88,25 +134,30 @@ $messageForm.addEventListener('submit', (e) => {
     })
 })
 
-$sendLocationButton.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-        return alert('Geolocation is not supported by your browser.')
-    }
-
-    $sendLocationButton.setAttribute('disabled', 'disabled')
-
-    navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit('sendLocation', {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-        }, () => {
-            $sendLocationButton.removeAttribute('disabled')
-            console.log('Location shared!')  
-        })
-    })
+$messageFormInput.addEventListener('keypress', function() {
+    console.log("emit typing")
+    socket.emit('sendTyping')
 })
 
-socket.emit('join', { username, room }, (error) => {
+// $sendLocationButton.addEventListener('click', function () {
+//     if (!navigator.geolocation) {
+//         return alert('Geolocation is not supported by your browser.')
+//     }
+
+//     $sendLocationButton.setAttribute('disabled', 'disabled')
+
+//     navigator.geolocation.getCurrentPosition(function (position) {
+//         socket.emit('sendLocation', {
+//             latitude: position.coords.latitude,
+//             longitude: position.coords.longitude
+//         }, function () {
+//             $sendLocationButton.removeAttribute('disabled')
+//             console.log('Location shared!')
+//         })
+//     })
+// })
+
+socket.emit('join', { username: username, room: room }, function (error) {
     if (error) {
         alert(error)
         location.href = '/'
