@@ -1,17 +1,26 @@
+const fs = require('fs')
 const path = require('path')
 const http = require('http')
+const https = require('https')
 const express = require('express')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
 const { generateMessage, generateLocationMessage, generateTypingMessage } = require('./utils/messages')
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
 
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/arthurferrailivechat.tk/privkey.pem', 'utf-8')
+const cert = fs.readFileSync('/etc/letsencrypt/live/arthurferrailivechat.tk/fullchain.pem', 'utf-8')
+const credentials = {key: privateKey, cert: cert}
 const app = express()
-const server = http.createServer(app)
-const io = socketio(server)
 
-const port = process.env.PORT || 3000
-const publicDirectoryPath = path.join(__dirname, '../public')
+const server = http.createServer(app)
+const httpsServer = https.createServer(credentials, app)
+
+const io = socketio(httpsServer)
+
+const port = process.env.PORT || 80
+const sslPort = process.env.SSL_PORT || 443
+const publicDirectoryPath = '/home/ubuntu/test-chat-js/public'
 
 app.use(express.static(publicDirectoryPath))
 
@@ -72,7 +81,9 @@ io.on('connection', (socket) => {
         }
     })
 })
-
-server.listen(port, () => {
-    console.log(`Server is up on port ${port}!`)
+httpsServer.listen(sslPort, () => {
+    console.log(`Secure server is up on port ${sslPort}`)
 })
+/*server.listen(port, () => {
+    console.log(`Server is up on port ${port}!`)
+})*/
