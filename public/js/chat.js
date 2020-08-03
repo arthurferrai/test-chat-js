@@ -160,6 +160,6 @@ $messageFormInput.addEventListener('keypress', function() {
 socket.emit('join', { username: username, room: room }, function (error) {
     if (error) {
         alert(error)
-        location.href = '/'
+        location.href = '/?room=' + room
     }
 })

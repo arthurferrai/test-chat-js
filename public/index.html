@@ -8,15 +8,22 @@
     <body>
         <div class="centered-form">
             <div class="centered-form__box">
-                <h1>Chat</h1>
-                <form action="/chat.html">
+                <h1 id="chat-title">Chat</h1>
+                <form>
                     <label>Nome</label>
                     <input type="text" name="username" placeholder="Nome" required>
-                    <label>Sala</label>
-                    <input type="text" name="room" placeholder="Sala" required>
-                    <button>Entrar</button>
+                    <button onclick="enterChat()">Entrar</button>
                 </form>
             </div>
         </div>
     </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>
+    <script type="javascript">
+        var name = document.getElementById("username")
+        var room = Qs.parse(location.search, { ignoreQueryPrefix: true }).room
+        document.getElementById("chat-title").innerText = room
+        function enterChat() {
+            window.location = '/chat.html?room=' + room + '&username=' + name.value
+        }
+    </script>
 </html>
