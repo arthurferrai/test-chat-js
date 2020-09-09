@@ -11,19 +11,23 @@
                 <h1 id="chat-title">Chat</h1>
                 <form>
                     <label>Nome</label>
-                    <input type="text" name="username" placeholder="Nome" required>
-                    <button onclick="enterChat()">Entrar</button>
+                    <input type="text" id="username" placeholder="Nome" required>
+                    <button id="enter-room">Entrar</button>
                 </form>
             </div>
         </div>
     </body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>
-    <script type="javascript">
-        var name = document.getElementById("username")
+    <script type="text/javascript">
         var room = Qs.parse(location.search, { ignoreQueryPrefix: true }).room
         document.getElementById("chat-title").innerText = room
-        function enterChat() {
-            window.location = '/chat.html?room=' + room + '&username=' + name.value
+        function enterChat(e) {
+            e.preventDefault()
+            var name = document.getElementById("username")
+            if (name.value) {
+                window.location.assign(encodeURI('https://afinaldx.com.br:8443/chat.html?room=' + room + '&username=' + name.value))
+            }
         }
+        document.getElementById('enter-room').addEventListener('click', enterChat, false);
     </script>
 </html>

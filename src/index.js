@@ -8,8 +8,8 @@ const Filter = require('bad-words')
 const { generateMessage, generateLocationMessage, generateTypingMessage } = require('./utils/messages')
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/arthurferrailivechat.tk/privkey.pem', 'utf-8')
-const cert = fs.readFileSync('/etc/letsencrypt/live/arthurferrailivechat.tk/fullchain.pem', 'utf-8')
+const privateKey = fs.readFileSync('/home/andrekamargo/afinaldx.com.br.key', 'utf-8')
+const cert = fs.readFileSync('/home/andrekamargo/server.crt', 'utf-8')
 const credentials = {key: privateKey, cert: cert}
 const app = express()
 
@@ -18,9 +18,9 @@ const httpsServer = https.createServer(credentials, app)
 
 const io = socketio(httpsServer)
 
-const port = process.env.PORT || 80
-const sslPort = process.env.SSL_PORT || 443
-const publicDirectoryPath = '/home/ubuntu/test-chat-js/public'
+const port = process.env.PORT || 8080
+const sslPort = process.env.SSL_PORT || 8443
+const publicDirectoryPath = '/home/andrekamargo/test-chat-js/public'
 
 app.use(express.static(publicDirectoryPath))
 
