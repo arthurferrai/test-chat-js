@@ -25,7 +25,7 @@
             e.preventDefault()
             var name = document.getElementById("username")
             if (name.value) {
-                window.location.assign(encodeURI('https://afinaldx.com.br:8443/chat.html?room=' + room + '&username=' + name.value))
+                window.location.assign(encodeURI('/chat.html?room=' + room + '&username=' + name.value))
             }
         }
         document.getElementById('enter-room').addEventListener('click', enterChat, false);
