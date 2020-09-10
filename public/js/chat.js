@@ -105,13 +105,15 @@ socket.on('message', function (message) {
 // })
 
 socket.on('roomData', function (roomData) {
+    var sidebar = document.querySelector('#sidebar')
+    if (!sidebar) return
     var room = roomData.room
     var users = roomData.users
     var html = Mustache.render(sidebarTemplate, {
         room: room,
         users: users
     })
-    document.querySelector('#sidebar').innerHTML = html
+    sidebar.innerHTML = html
 })
 
 $messageForm.addEventListener('submit', function (e) {
