@@ -16,16 +16,19 @@ const db = new sqlite3.Database('./history.db', (err) => {
 
 const initTable = () => {
   const days = parseInt(daysToPersist, 10) || 30
-  db.run(`CREATE TABLE IF NOT EXISTS History (
+  db.serialize(() => {
+    db.exec(`CREATE TABLE IF NOT EXISTS History (
       RoomName TEXT,
       username TEXT,
       "text" TEXT,
       createdAt INTEGER
-    );
-    CREATE TRIGGER IF NOT EXISTS trigger_remove_old AFTER INSERT ON History
-    BEGIN
-      DELETE FROM History WHERE DATETIME(createdAt) > DATETIME('now', '-${days} days');
-    END;`)
+    );`)
+    db.exec('DROP TRIGGER IF EXISTS trigger_remove_old;')
+    db.exec(`CREATE TRIGGER trigger_remove_old AFTER INSERT ON History
+      BEGIN
+        DELETE FROM History WHERE DATETIME(createdAt) > DATETIME('now', '-${days} days');
+      END;`)
+  })
 }
 
 const saveMessage = (roomName, {username, text, createdAt}) => {
