@@ -51,6 +51,10 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', (message, callback) => {
         const user = getUser(socket.id)
+        if (!user || !user.room) {
+            socket.close()
+            return
+        }
         const messageToSend = generateMessage(user.username, message)
         io.to(user.room).emit('message', messageToSend)
         saveMessage(user.room, messageToSend)
@@ -59,7 +63,10 @@ io.on('connection', (socket) => {
 
     socket.on('sendTyping', () => {
         const user = getUser(socket.id)
-        if (!user || !user.room) return
+        if (!user || !user.room) {
+            socket.close()
+            return
+        }
         socket.to(user.room).emit('typing', generateTypingMessage(user.username))
     })
 
