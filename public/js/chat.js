@@ -18,7 +18,7 @@ var ___options = Qs.parse(location.search, { ignoreQueryPrefix: true })
 var username = ___options.username
 var room = ___options.room
 
-function autoscroll() {
+function autoscroll(force) {
     // New message element
     var $newMessage = $messages.lastElementChild
 
@@ -36,7 +36,7 @@ function autoscroll() {
     // How far have I scrolled?
     var scrollOffset = $messages.scrollTop + visibleHeight
 
-    if (containerHeight - newMessageHeight <= scrollOffset) {
+    if (force || containerHeight - newMessageHeight <= scrollOffset) {
         $messages.scrollTop = $messages.scrollHeight
     }
 }
