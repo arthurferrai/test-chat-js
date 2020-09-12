@@ -80,29 +80,23 @@ socket.on('typing', function(data) {
         formatTypingText()
     }, 5000)
 })
+
+function appendMessage(messageData) {
+    var html = Mustache.render(messageTemplate, {
+        username: messageData.username,
+        message: messageData.text,
+        createdAt: moment(messageData.createdAt).format('h:mm a')
+    })
+    $messages.insertAdjacentHTML('beforeend', html)
+}
+
 socket.on('message', function (message) {
     console.log(message)
     removeFromTyping(message.username)
     formatTypingText()
-    var html = Mustache.render(messageTemplate, {
-        username: message.username,
-        message: message.text,
-        createdAt: moment(message.createdAt).format('h:mm a')
-    })
-    $messages.insertAdjacentHTML('beforeend', html)
+    appendMessage(message)
     autoscroll()
 })
-
-// socket.on('locationMessage', function (message) {
-//     console.log(message)
-//     var html = Mustache.render(locationMessageTemplate, {
-//         username: message.username,
-//         url: message.url,
-//         createdAt: moment(message.createdAt).format('h:mm a')
-//     })
-//     $messages.insertAdjacentHTML('beforeend', html)
-//     autoscroll()
-// })
 
 socket.on('roomData', function (roomData) {
     var sidebar = document.querySelector('#sidebar')
@@ -114,6 +108,22 @@ socket.on('roomData', function (roomData) {
         users: users
     })
     sidebar.innerHTML = html
+})
+
+var timeoutHandle = null
+socket.on('disconnect', function() {
+    if (timeoutHandle) {
+        clearTimeout(timeoutHandle)
+        timeoutHandle = null
+    }
+    timeoutHandle = setTimeout(function() {history.go(0)}, 1000)
+})
+
+socket.on('connect', function() {
+    if (timeoutHandle) {
+        clearTimeout(timeoutHandle)
+        timeoutHandle = null
+    }
 })
 
 $messageForm.addEventListener('submit', function (e) {
@@ -140,24 +150,6 @@ $messageFormInput.addEventListener('keypress', function() {
     console.log("emit typing")
     socket.emit('sendTyping')
 })
-
-// $sendLocationButton.addEventListener('click', function () {
-//     if (!navigator.geolocation) {
-//         return alert('Geolocation is not supported by your browser.')
-//     }
-
-//     $sendLocationButton.setAttribute('disabled', 'disabled')
-
-//     navigator.geolocation.getCurrentPosition(function (position) {
-//         socket.emit('sendLocation', {
-//             latitude: position.coords.latitude,
-//             longitude: position.coords.longitude
-//         }, function () {
-//             $sendLocationButton.removeAttribute('disabled')
-//             console.log('Location shared!')
-//         })
-//     })
-// })
 
 socket.emit('join', { username: username, room: room }, function (error) {
     if (error) {
