@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
 
     socket.on('sendTyping', () => {
         const user = getUser(socket.id)
-        if (!user.room) return
+        if (!user || !user.room) return
         socket.to(user.room).emit('typing', generateTypingMessage(user.username))
     })
 
