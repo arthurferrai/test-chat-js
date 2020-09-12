@@ -4,9 +4,11 @@ const http = require('http')
 const https = require('https')
 const express = require('express')
 const socketio = require('socket.io')
-const Filter = require('bad-words')
-const { generateMessage, generateLocationMessage, generateTypingMessage } = require('./utils/messages')
+const { generateMessage, generateTypingMessage } = require('./utils/messages')
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
+const { saveMessage, getHistory, initTable } = require('./persistence/persistence')
+
+initTable()
 
 const privateKey = fs.readFileSync('/home/andrekamargo/afinaldx.com.br.key', 'utf-8')
 const cert = fs.readFileSync('/home/andrekamargo/server.crt', 'utf-8')
@@ -42,19 +44,16 @@ io.on('connection', (socket) => {
             room: user.room,
             users: getUsersInRoom(user.room)
         })
-
-        callback()
+        getHistory(user.room)
+            .then((history) => Promise.resolve(socket.emit('history', history)))
+            .then(Promise.resolve(callback)).catch(console.error)
     })
 
     socket.on('sendMessage', (message, callback) => {
         const user = getUser(socket.id)
-        const filter = new Filter()
-
-        if (filter.isProfane(message)) {
-            return callback('Profanity is not allowed!')
-        }
-
-        io.to(user.room).emit('message', generateMessage(user.username, message))
+        const messageToSend = generateMessage(user.username, message)
+        io.to(user.room).emit('message', messageToSend)
+        saveMessage(user.room, messageToSend)
         callback()
     })
 
