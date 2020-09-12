@@ -116,7 +116,9 @@ socket.on('disconnect', function() {
         clearTimeout(timeoutHandle)
         timeoutHandle = null
     }
-    timeoutHandle = setTimeout(function() {history.go(0)}, 1000)
+    timeoutHandle = setTimeout(function() {
+        window.location.assign(encodeURI('/chat.html?room=' + room + '&username=' + username))
+    }, 1000)
 })
 
 socket.on('connect', function() {
