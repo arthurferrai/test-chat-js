@@ -35,6 +35,18 @@
             </div>
         </script>
 
+    <script id="history-template" type="text/html">
+        {{#history}}
+        <div class="message">
+            <p>
+                <span class="message__name">{{username}}</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p>{{text}}</p>
+        </div>
+        {{/history}}
+    </script>
+
     <script id="location-message-template" type="text/html">
             <div class="message">
                 <p>
