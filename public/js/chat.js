@@ -10,6 +10,7 @@ var $typing = document.getElementById('typing')
 
 // Templates
 var messageTemplate = document.getElementById('message-template').innerHTML
+var historyTemplate = document.getElementById('history-template').innerHTML
 var locationMessageTemplate = document.getElementById('location-message-template').innerHTML
 var sidebarTemplate = document.getElementById('sidebar-template').innerHTML
 
@@ -56,6 +57,7 @@ function addToTyping(username) {
         peopleTyping.push(username)
     }
 }
+
 function removeFromTyping(username) {
     var userIndex = peopleTyping.indexOf(username)
     if (userIndex === -1) return
@@ -90,6 +92,15 @@ function appendMessage(messageData) {
     $messages.insertAdjacentHTML('beforeend', html)
 }
 
+function appendHistory(messages) {
+    for(var i = 0; i < messages.length; i++) {
+        var message = messages[i]
+        message.createdAt = moment(message.createdAt).format('h:mm a')
+    }
+    var html = Mustache.render(historyTemplate, { history: messages })
+    $messages.insertAdjacentHTML('beforeend', html)
+}
+
 socket.on('message', function (message) {
     console.log(message)
     removeFromTyping(message.username)
@@ -108,6 +119,15 @@ socket.on('roomData', function (roomData) {
         users: users
     })
     sidebar.innerHTML = html
+})
+
+socket.on('history', function (historyData) {
+    var firstMessage = $messages.children[0]
+    $messages.innerHTML = ''
+    if (firstMessage) $messages.appendChild(firstMessage)
+
+    appendHistory(historyData)
+    setTimeout(function() {autoscroll(true)}, 0)
 })
 
 var timeoutHandle = null
