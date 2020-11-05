@@ -22,7 +22,7 @@ const io = socketio(httpsServer)
 
 const port = process.env.PORT || 8080
 const sslPort = process.env.SSL_PORT || 8443
-const publicDirectoryPath = '/home/andrekamargo/test-chat-js/public'
+const publicDirectoryPath = './public'
 
 app.use(express.static(publicDirectoryPath))
 
